@@ -24,12 +24,39 @@ enum ComplianceStatus {
   OVERDUE
 }
 
+enum TransactionSource {
+  MANUAL
+}
+
+enum ChallengeStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum ParticipationStatus {
+  JOINED
+  COMPLETED
+}
+
+enum IssueSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 model Department {
   id               Int               @id @default(autoincrement())
   name             String            @unique
   users            User[]
   metrics          EsgMetric[]
   complianceItems  ComplianceItem[]
+  carbonTransactions CarbonTransaction[]
+  complianceIssues ComplianceIssue[]
+  departmentScores DepartmentScore[]
+  challenges       Challenge[]
+  csrActivityLogs  CSRActivity[]
   userDepartments  UserDepartment[]
   @@index([name])
 }
@@ -57,6 +84,11 @@ model User {
   metrics      EsgMetric[] @relation("MetricSubmittedBy")
   csrActivities CsrActivity[] @relation("ActivityParticipant")
   auditLogs    AuditLog[] @relation("AuditPerformedBy")
+  createdEmissionFactors EmissionFactor[] @relation("EmissionFactorCreatedBy")
+  createdCarbonTransactions CarbonTransaction[] @relation("CarbonTransactionCreatedBy")
+  challengeParticipations ChallengeParticipation[]
+  employeeParticipations EmployeeParticipation[]
+  createdChallenges Challenge[] @relation("ChallengeCreatedBy")
   departments  UserDepartment[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -125,4 +157,189 @@ model AuditLog {
 
   @@index([entity, entityId])
   @@index([timestamp])
+}
+
+model EmissionFactor {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  category           String
+  categoryId         Int?
+  categoryRef        Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  unit               String
+  co2PerUnit         Float
+  createdById        Int?
+  createdBy          User?               @relation("EmissionFactorCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  carbonTransactions CarbonTransaction[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([category])
+  @@index([categoryId])
+  @@index([name])
+}
+
+model CarbonTransaction {
+  id                 Int               @id @default(autoincrement())
+  departmentId       Int
+  department         Department        @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  emissionFactorId   Int
+  emissionFactor     EmissionFactor    @relation(fields: [emissionFactorId], references: [id], onDelete: Restrict)
+  quantity           Float
+  calculatedEmission Float
+  source             TransactionSource @default(MANUAL)
+  createdById        Int
+  createdBy          User              @relation("CarbonTransactionCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  date               DateTime          @default(now())
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([departmentId])
+  @@index([date])
+  @@index([emissionFactorId])
+}
+
+model Category {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  description     String?
+  emissionFactors EmissionFactor[]
+  badges          Badge[]
+  rewards         Reward[]
+  challenges      Challenge[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([name])
+}
+
+model Badge {
+  id                     Int                     @id @default(autoincrement())
+  name                   String
+  description            String?
+  categoryId             Int?
+  category               Category?               @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  employeeParticipations EmployeeParticipation[] @relation("BadgeAwardedTo")
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  @@unique([name, categoryId])
+  @@index([categoryId])
+}
+
+model Reward {
+  id                     Int                     @id @default(autoincrement())
+  name                   String
+  description            String?
+  categoryId             Int?
+  pointsCost             Int                     @default(0)
+  category               Category?               @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  employeeParticipations EmployeeParticipation[] @relation("RewardRedeemedBy")
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  @@unique([name, categoryId])
+  @@index([categoryId])
+}
+
+model CSRActivity {
+  id                     Int                     @id @default(autoincrement())
+  title                  String
+  description            String?
+  departmentId           Int?
+  department             Department?             @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  activityDate           DateTime                @default(now())
+  hoursSpent             Float                   @default(0)
+  employeeParticipations EmployeeParticipation[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  @@index([departmentId])
+  @@index([activityDate])
+}
+
+model EmployeeParticipation {
+  id                        Int                    @id @default(autoincrement())
+  userId                    Int
+  csrActivityId             Int?
+  badgeId                   Int?
+  rewardId                  Int?
+  pointsEarned              Int                    @default(0)
+  participatedAt            DateTime               @default(now())
+  user                      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  csrActivity               CSRActivity?           @relation(fields: [csrActivityId], references: [id], onDelete: SetNull)
+  badgeAwarded              Badge?                 @relation("BadgeAwardedTo", fields: [badgeId], references: [id], onDelete: SetNull)
+  rewardRedeemed            Reward?                @relation("RewardRedeemedBy", fields: [rewardId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([csrActivityId])
+  @@index([participatedAt])
+}
+
+model Challenge {
+  id                      Int                      @id @default(autoincrement())
+  title                   String
+  description             String?
+  departmentId            Int?
+  categoryId              Int?
+  createdById             Int?
+  startDate               DateTime
+  endDate                 DateTime
+  status                  ChallengeStatus          @default(DRAFT)
+  department              Department?              @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  category                Category?                @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdBy               User?                    @relation("ChallengeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  challengeParticipations ChallengeParticipation[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+
+  @@index([departmentId])
+  @@index([categoryId])
+  @@index([status])
+}
+
+model ChallengeParticipation {
+  id              Int                 @id @default(autoincrement())
+  challengeId     Int
+  userId          Int
+  status          ParticipationStatus @default(JOINED)
+  progressValue   Float?              @default(0)
+  joinedAt        DateTime            @default(now())
+  completedAt     DateTime?
+  challenge       Challenge           @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+  @@index([userId])
+  @@index([status])
+}
+
+model ComplianceIssue {
+  id            Int           @id @default(autoincrement())
+  departmentId  Int
+  title         String
+  description   String?
+  severity      IssueSeverity @default(MEDIUM)
+  isResolved    Boolean       @default(false)
+  raisedAt      DateTime      @default(now())
+  resolvedAt    DateTime?
+  department    Department    @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@index([departmentId])
+  @@index([severity])
+  @@index([isResolved])
+}
+
+model DepartmentScore {
+  id             Int        @id @default(autoincrement())
+  departmentId   Int
+  scoreDate      DateTime   @default(now())
+  environmental  Float      @default(0)
+  social         Float      @default(0)
+  governance     Float      @default(0)
+  totalScore     Float      @default(0)
+  department     Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, scoreDate])
+  @@index([departmentId])
+  @@index([scoreDate])
 }
