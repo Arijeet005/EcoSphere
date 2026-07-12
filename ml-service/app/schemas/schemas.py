@@ -42,6 +42,13 @@ class SocialInput(BaseModel):
     social_metrics: MetricGroup
 
 
+class GovernanceInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    department: DepartmentInput
+    governance_metrics: MetricGroup
+
+
 class ValidationErrorItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -88,15 +95,27 @@ class SocialResult(BaseModel):
     social_score: int
 
 
+class GovernanceResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    audit_score: int
+    policy_score: int
+    compliance_score: int
+    risk_score: int
+    governance_score: int
+
+
 __all__ = [
     "DepartmentInput",
     "MetricGroup",
     "ESGRequest",
     "EnvironmentalInput",
     "SocialInput",
+    "GovernanceInput",
     "ValidationErrorItem",
     "ScoreBreakdown",
     "ESGResponse",
     "EnvironmentalResult",
     "SocialResult",
+    "GovernanceResult",
 ]

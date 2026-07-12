@@ -147,6 +147,17 @@ def compliance_issue_score() -> int:
     return _placeholder_score()
 
 
+def risk_score() -> int:
+    """Business rule for governance risk exposure.
+
+    Intended rule: evaluate residual operational and compliance risk after
+    controls, mitigation actions, and monitoring signals are considered.
+
+    Current behavior: returns a placeholder integer score.
+    """
+    return _placeholder_score()
+
+
 __all__ = [
     "carbon_score",
     "water_score",
@@ -159,4 +170,5 @@ __all__ = [
     "audit_score",
     "policy_score",
     "compliance_issue_score",
+    "risk_score",
 ]
