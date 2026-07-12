@@ -35,6 +35,13 @@ class EnvironmentalInput(BaseModel):
     environment_metrics: MetricGroup
 
 
+class SocialInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    department: DepartmentInput
+    social_metrics: MetricGroup
+
+
 class ValidationErrorItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -71,13 +78,25 @@ class EnvironmentalResult(BaseModel):
     environmental_score: int
 
 
+class SocialResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    csr_score: int
+    participation_score: int
+    training_score: int
+    diversity_score: int
+    social_score: int
+
+
 __all__ = [
     "DepartmentInput",
     "MetricGroup",
     "ESGRequest",
     "EnvironmentalInput",
+    "SocialInput",
     "ValidationErrorItem",
     "ScoreBreakdown",
     "ESGResponse",
     "EnvironmentalResult",
+    "SocialResult",
 ]

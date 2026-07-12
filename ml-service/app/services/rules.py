@@ -81,6 +81,17 @@ def csr_score() -> int:
     return _placeholder_score()
 
 
+def participation_score() -> int:
+    """Business rule for participation and engagement.
+
+    Intended rule: evaluate employee participation levels across social and
+    community-oriented programs over a reporting period.
+
+    Current behavior: returns a placeholder integer score.
+    """
+    return _placeholder_score()
+
+
 def training_score() -> int:
     """Business rule for employee training and development.
 
@@ -142,6 +153,7 @@ __all__ = [
     "electricity_score",
     "renewable_score",
     "csr_score",
+    "participation_score",
     "training_score",
     "diversity_score",
     "audit_score",
