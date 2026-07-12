@@ -6,7 +6,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('ecosphere-token') || localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -18,7 +18,7 @@ api.interceptors.response.use(
   (error) => {
     const message = error.response?.data?.message || error.message || 'Request failed';
     return Promise.reject(new Error(message));
-  }
+  },
 );
 
 export default api;
