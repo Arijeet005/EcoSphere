@@ -67,7 +67,7 @@ trained models.
 ### Setup
 ```bash
 # clone and install
-git clone <repo-url>
+git clone <https://github.com/Arijeet005/EcoSphere>
 cd ecosphere
 npm install          # installs root-level concurrently
 cd server && npm install
