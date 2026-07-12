@@ -6,11 +6,7 @@ import metricsRoutes from './routes/metricsRoutes.js';
 import complianceRoutes from './routes/complianceRoutes.js';
 import csrRoutes from './routes/csrRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
-<<<<<<< HEAD
-=======
-import emissionFactorRoutes from './routes/emissionFactorRoutes.js';
-import carbonRoutes from './routes/carbonRoutes.js';
->>>>>>> b0514b66e92ad0566c63987828ebefd224fdc116
+import scoreRoutes from './routes/scoreRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -31,12 +27,7 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/csr', csrRoutes);
-<<<<<<< HEAD
-app.use('/api/departments', departmentRoutes);
-=======
-app.use('/api/emission-factors', emissionFactorRoutes);
-app.use('/api/carbon', carbonRoutes);
->>>>>>> b0514b66e92ad0566c63987828ebefd224fdc116
+app.use('/api/scores', scoreRoutes);
 
 app.use(errorHandler);
 
