@@ -1,4 +1,7 @@
-import api from './axiosInstance';
+import { getMockCarbonSummary, getMockCarbonTransactions, getMockDepartments, getMockEmissionFactors, mockCreateCarbonTransaction } from './mockApi.js';
 
-export const fetchMetrics = () => api.get('/metrics');
-export const createMetric = (payload) => api.post('/metrics', payload);
+export const fetchDepartments = () => getMockDepartments();
+export const fetchEmissionFactors = () => getMockEmissionFactors();
+export const fetchCarbonTransactions = () => getMockCarbonTransactions();
+export const fetchCarbonSummary = (departmentId) => getMockCarbonSummary(departmentId);
+export const createCarbonTransaction = (payload) => mockCreateCarbonTransaction(payload);

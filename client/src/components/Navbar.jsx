@@ -20,7 +20,8 @@ const Navbar = () => {
         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
           {user ? (
             <>
-              <Link to="/dashboard" className="hover:text-white">Dashboard</Link>
+              <Link to="/dashboard" className="hover:text-white">Environmental</Link>
+              <Link to="/carbon-transaction" className="hover:text-white">Carbon Tracking</Link>
               {user.role === 'MANAGER' ? <Link to="/reports" className="hover:text-white">Reports</Link> : null}
               <button onClick={handleLogout} className="rounded bg-slate-800 px-3 py-1.5 hover:bg-slate-700">
                 Logout
