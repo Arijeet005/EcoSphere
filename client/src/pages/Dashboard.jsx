@@ -1,90 +1,204 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchMetrics } from '../api/metricsApi';
-import ChartPanel from '../components/ChartPanel';
-import MetricCard from '../components/MetricCard';
+import { useNavigate } from 'react-router-dom';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { fetchActivityFeed, fetchDepartmentRankings, fetchEmissionsTrend, fetchOverallScores } from '../api/metricsApi';
+
+const scoreTiles = [
+  { key: 'environmentalScore', label: 'Environmental Score', border: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200' },
+  { key: 'socialScore', label: 'Social Score', border: 'border-violet-500/40 bg-violet-500/10 text-violet-200' },
+  { key: 'governanceScore', label: 'Governance Score', border: 'border-sky-500/40 bg-sky-500/10 text-sky-200' },
+  { key: 'overallScore', label: 'Overall ESG Score', border: 'border-amber-500/40 bg-amber-500/10 text-amber-200' },
+];
 
 const Dashboard = () => {
-  const [metrics, setMetrics] = useState([]);
+  const navigate = useNavigate();
+  const [scores, setScores] = useState(null);
+  const [trendData, setTrendData] = useState([]);
+  const [rankingData, setRankingData] = useState([]);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const loadMetrics = async () => {
+    const loadDashboard = async () => {
       try {
         setLoading(true);
-        const response = await fetchMetrics();
-        setMetrics(response?.data?.data || []);
+        const [scoresResponse, trendResponse, rankingsResponse, activitiesResponse] = await Promise.all([
+          fetchOverallScores(),
+          fetchEmissionsTrend(),
+          fetchDepartmentRankings(),
+          fetchActivityFeed(),
+        ]);
+
+        setScores(scoresResponse?.data?.data || null);
+        setTrendData(trendResponse?.data?.data || []);
+        setRankingData(rankingsResponse?.data?.data || []);
+        setActivities(activitiesResponse?.data?.data || []);
         setError('');
       } catch (err) {
-        setError(err.message || 'Unable to load metrics');
+        setError(err.message || 'Unable to load dashboard data');
       } finally {
         setLoading(false);
       }
     };
 
-    loadMetrics();
+    loadDashboard();
   }, []);
 
-  const chartData = useMemo(() => {
-    const grouped = metrics.reduce((acc, metric) => {
-      const key = metric.type?.toLowerCase() || 'other';
-      acc[key] = (acc[key] || 0) + Number(metric.value || 0);
-      return acc;
-    }, {});
+  const rankingChartData = useMemo(() => rankingData.map((item) => ({ name: item.name, score: item.score })), [rankingData]);
 
-    return Object.entries(grouped).map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }));
-  }, [metrics]);
+  const renderSectionState = (isLoading, isEmpty, emptyMessage, content) => {
+    if (isLoading) {
+      return <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-sm text-slate-400">Loading…</div>;
+    }
+
+    if (isEmpty) {
+      return <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-sm text-slate-400">{emptyMessage}</div>;
+    }
+
+    return content;
+  };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-white">ESG Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-400">Track ESG metrics, compliance, and CSR activity from one place.</p>
+          <h1 className="text-3xl font-semibold text-white">Executive Dashboard</h1>
+          <p className="mt-1 text-sm text-slate-400">Monitor ESG performance, carbon impact, and team engagement at a glance.</p>
         </div>
+        <div className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-300">Live Overview</div>
       </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-3">
-        <MetricCard title="Metrics captured" value={metrics.length} unit="records" subtitle="Mock-backed for hackathon demos" />
-        <MetricCard title="Environmental" value={metrics.filter((item) => item.type === 'ENVIRONMENTAL').length} unit="entries" subtitle="Energy and emissions" />
-        <MetricCard title="Governance" value={metrics.filter((item) => item.type === 'GOVERNANCE').length} unit="entries" subtitle="Policy and controls" />
+      {error ? <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-300">{error}</div> : null}
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {scoreTiles.map((tile) => {
+          const value = scores?.[tile.key] ?? null;
+          return (
+            <div key={tile.label} className={`rounded-2xl border p-5 shadow-lg shadow-slate-950/20 ${tile.border}`}>
+              <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-300">{tile.label}</p>
+              {loading ? (
+                <div className="mt-4 h-12 w-24 animate-pulse rounded-lg bg-slate-900/70" />
+              ) : value == null ? (
+                <p className="mt-4 text-sm text-slate-400">No score available</p>
+              ) : (
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="text-4xl font-semibold">{value}</span>
+                  <span className="text-lg text-slate-300">/ 100</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {loading ? (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400">Loading metrics…</div>
-      ) : error ? (
-        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-300">{error}</div>
-      ) : metrics.length === 0 ? (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400">No metrics yet. Add your first ESG metric to populate the dashboard.</div>
-      ) : (
-        <div className="space-y-6">
-          <ChartPanel data={chartData} />
-          <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-            <table className="min-w-full divide-y divide-slate-800 text-sm text-slate-300">
-              <thead className="bg-slate-800/80">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium">Name</th>
-                  <th className="px-4 py-3 text-left font-medium">Type</th>
-                  <th className="px-4 py-3 text-left font-medium">Value</th>
-                  <th className="px-4 py-3 text-left font-medium">Unit</th>
-                  <th className="px-4 py-3 text-left font-medium">Submitted by</th>
-                </tr>
-              </thead>
-              <tbody>
-                {metrics.map((metric) => (
-                  <tr key={metric.id} className="border-t border-slate-800">
-                    <td className="px-4 py-3">{metric.name}</td>
-                    <td className="px-4 py-3">{metric.type}</td>
-                    <td className="px-4 py-3">{metric.value}</td>
-                    <td className="px-4 py-3">{metric.unit}</td>
-                    <td className="px-4 py-3">{metric.submittedBy?.name || 'Unknown'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-white">Emissions Trend</h2>
+              <p className="mt-1 text-sm text-slate-400">Rolling 12-month emissions snapshot</p>
+            </div>
+          </div>
+          {renderSectionState(
+            loading,
+            trendData.length === 0,
+            'No emissions trend data available yet.',
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendData}>
+                  <CartesianGrid stroke="#27272a" vertical={false} />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: '#94a3b8' }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fill: '#94a3b8' }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="emissions" stroke="#34d399" strokeWidth={3} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>,
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-white">Quick Actions</h2>
+            <p className="mt-1 text-sm text-slate-400">Jump into operations and reporting workflows.</p>
+          </div>
+          <div className="space-y-3">
+            <button onClick={() => navigate('/environmental/carbon-transactions')} className="flex w-full items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-left text-emerald-200 transition hover:bg-emerald-500/20">
+              <span className="font-medium">+ Log Carbon Data</span>
+              <span>→</span>
+            </button>
+            <button onClick={() => navigate('/gamification/challenges')} className="flex w-full items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-left text-amber-200 transition hover:bg-amber-500/20">
+              <span className="font-medium">Start Challenge</span>
+              <span>→</span>
+            </button>
+            <button onClick={() => navigate('/reports/summary')} className="flex w-full items-center justify-between rounded-2xl border border-slate-700 bg-slate-800/80 px-4 py-3 text-left text-slate-200 transition hover:bg-slate-700">
+              <span className="font-medium">View Reports</span>
+              <span>→</span>
+            </button>
           </div>
         </div>
-      )}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-white">Department ESG Ranking</h2>
+            <p className="mt-1 text-sm text-slate-400">Compare departments by their latest ESG score</p>
+          </div>
+          {renderSectionState(
+            loading,
+            rankingChartData.length === 0,
+            'No department rankings available yet.',
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={rankingChartData}>
+                  <CartesianGrid stroke="#27272a" vertical={false} />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: '#94a3b8' }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fill: '#94a3b8' }} />
+                  <Tooltip />
+                  <Bar dataKey="score" fill="#818cf8" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>,
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-white">Recent Activity</h2>
+            <p className="mt-1 text-sm text-slate-400">Latest sustainability and governance milestones</p>
+          </div>
+          {renderSectionState(
+            loading,
+            activities.length === 0,
+            'No recent activity yet.',
+            <div className="space-y-3">
+              {activities.map((activity) => (
+                <div key={activity.id} className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-white">{activity.title}</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">{activity.category}</p>
+                    </div>
+                    <span className="text-xs text-slate-400">{activity.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>,
+          )}
+        </div>
+      </div>
     </div>
   );
 };
