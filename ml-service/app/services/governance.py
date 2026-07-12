@@ -6,13 +6,7 @@ It does not expose API routes and does not depend on FastAPI.
 
 from app.schemas.schemas import GovernanceInput, GovernanceResult
 from app.services import rules
-
-
-def _average_score(*scores: int) -> int:
-    """Return the rounded integer average for a non-empty list of scores."""
-    if not scores:
-        return 0
-    return int(round(sum(scores) / len(scores)))
+from app.services._shared import average_score
 
 
 def calculate_governance_score(payload: GovernanceInput) -> GovernanceResult:
@@ -26,7 +20,7 @@ def calculate_governance_score(payload: GovernanceInput) -> GovernanceResult:
     compliance = rules.compliance_issue_score()
     risk = rules.risk_score()
 
-    governance_score = _average_score(audit, policy, compliance, risk)
+    governance_score = average_score(audit, policy, compliance, risk)
 
     return GovernanceResult(
         audit_score=audit,

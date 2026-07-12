@@ -5,15 +5,24 @@ from __future__ import annotations
 import logging
 import time
 from contextlib import asynccontextmanager
-from logging.config import dictConfig
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from app.schemas.schemas import ESGRequest, ESGResponse, ScoreBreakdown, ValidationErrorItem
+from app.core.exceptions import register_exception_handlers
+from app.core.logging import configure_logging
+from app.schemas.schemas import (
+	ESGRequest,
+	ESGResponse,
+	EnvironmentalInput,
+	EnvironmentalResult,
+	GovernanceInput,
+	GovernanceResult,
+	ScoreBreakdown,
+	SocialInput,
+	SocialResult,
+)
 from app.services.calculator import calculate_esg_scores
 from app.services.environmental import calculate_environmental_score
 from app.services.governance import calculate_governance_score
@@ -31,28 +40,7 @@ class HealthResponse(BaseModel):
 	service: str = Field(..., description="Service name")
 
 
-LOGGING_CONFIG: dict[str, object] = {
-	"version": 1,
-	"disable_existing_loggers": False,
-	"formatters": {
-		"default": {
-			"format": "%(asctime)s %(levelname)s %(name)s %(message)s",
-		},
-	},
-	"handlers": {
-		"default": {
-			"class": "logging.StreamHandler",
-			"formatter": "default",
-		},
-	},
-	"root": {
-		"handlers": ["default"],
-		"level": "INFO",
-	},
-}
-
-
-dictConfig(LOGGING_CONFIG)
+configure_logging()
 logger = logging.getLogger("ecosphere.ml_service")
 
 
@@ -73,10 +61,12 @@ app = FastAPI(
 app.add_middleware(
 	CORSMiddleware,
 	allow_origins=["*"],
-	allow_credentials=True,
+	allow_credentials=False,
 	allow_methods=["*"],
 	allow_headers=["*"],
 )
+
+register_exception_handlers(app, logger)
 
 
 @app.middleware("http")
@@ -100,39 +90,29 @@ async def log_requests(request: Request, call_next):
 	return response
 
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-	logger.warning("validation_error path=%s errors=%s", request.url.path, exc.errors())
-	return JSONResponse(
-		status_code=422,
-		content={
-			"detail": exc.errors(),
-			"message": "Request validation failed",
-		},
+def _build_domain_results(
+	payload: ESGRequest,
+) -> tuple[EnvironmentalResult, SocialResult, GovernanceResult]:
+	"""Return the domain service outputs used by the ESG endpoint."""
+	environmental_result = calculate_environmental_score(
+		EnvironmentalInput(
+			department=payload.department,
+			environment_metrics=payload.environment_metrics,
+		)
 	)
-
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-	logger.warning(
-		"http_exception path=%s status_code=%s detail=%s",
-		request.url.path,
-		exc.status_code,
-		exc.detail,
+	social_result = calculate_social_score(
+		SocialInput(
+			department=payload.department,
+			social_metrics=payload.social_metrics,
+		)
 	)
-	return JSONResponse(
-		status_code=exc.status_code,
-		content={"detail": exc.detail},
+	governance_result = calculate_governance_score(
+		GovernanceInput(
+			department=payload.department,
+			governance_metrics=payload.governance_metrics,
+		)
 	)
-
-
-@app.exception_handler(Exception)
-async def unhandled_exception_handler(request: Request, exc: Exception):
-	logger.exception("unhandled_error path=%s", request.url.path)
-	return JSONResponse(
-		status_code=500,
-		content={"detail": "Internal server error"},
-	)
+	return environmental_result, social_result, governance_result
 
 
 @app.get("/", response_model=RootResponse)
@@ -151,15 +131,7 @@ async def health() -> HealthResponse:
 async def calculate_esg(payload: ESGRequest) -> ESGResponse:
 	"""Calculate ESG scores and return rule-based recommendations."""
 	try:
-		environmental_result = calculate_environmental_score(
-			environment_payload := payload.model_copy(update={})
-		)
-		social_result = calculate_social_score(
-			social_payload := payload.model_copy(update={})
-		)
-		governance_result = calculate_governance_score(
-			governance_payload := payload.model_copy(update={})
-		)
+		environmental_result, social_result, governance_result = _build_domain_results(payload)
 		calculator_result = calculate_esg_scores(payload)
 		recommendations = generate_recommendations(
 			carbon_score=environmental_result.carbon_score,
@@ -175,11 +147,9 @@ async def calculate_esg(payload: ESGRequest) -> ESGResponse:
 			compliance_score=governance_result.compliance_score,
 			risk_score=governance_result.risk_score,
 		)
-	except HTTPException:
-		raise
-	except Exception as exc:
+	except Exception:
 		logger.exception("esg_calculation_failed department=%s", payload.department.name)
-		raise HTTPException(status_code=500, detail="ESG calculation failed") from exc
+		raise
 
 	return ESGResponse(
 		scores=ScoreBreakdown(

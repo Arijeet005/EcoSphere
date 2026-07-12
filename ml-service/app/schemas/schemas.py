@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -60,10 +60,10 @@ class ValidationErrorItem(BaseModel):
 class ScoreBreakdown(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    environment_score: float
-    social_score: float
-    governance_score: float
-    overall_esg: float
+    environment_score: int
+    social_score: int
+    governance_score: int
+    overall_esg: int
 
 
 class ESGResponse(BaseModel):
@@ -71,8 +71,8 @@ class ESGResponse(BaseModel):
 
     scores: ScoreBreakdown
     rating: str
-    recommendations: List[str] = Field(default_factory=list)
-    validation_errors: List[ValidationErrorItem] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+    validation_errors: list[ValidationErrorItem] = Field(default_factory=list)
 
 
 class EnvironmentalResult(BaseModel):

@@ -6,13 +6,7 @@ It does not expose API routes and does not depend on FastAPI.
 
 from app.schemas.schemas import SocialInput, SocialResult
 from app.services import rules
-
-
-def _average_score(*scores: int) -> int:
-    """Return the rounded integer average for a non-empty list of scores."""
-    if not scores:
-        return 0
-    return int(round(sum(scores) / len(scores)))
+from app.services._shared import average_score
 
 
 def calculate_social_score(payload: SocialInput) -> SocialResult:
@@ -26,7 +20,7 @@ def calculate_social_score(payload: SocialInput) -> SocialResult:
     training = rules.training_score()
     diversity = rules.diversity_score()
 
-    social_score = _average_score(csr, participation, training, diversity)
+    social_score = average_score(csr, participation, training, diversity)
 
     return SocialResult(
         csr_score=csr,
