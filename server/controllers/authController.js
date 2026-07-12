@@ -2,7 +2,16 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/db.js';
 
-const signToken = (user) => jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+const signToken = (user) =>
+  jwt.sign(
+    {
+      userId: user.id,
+      role: user.role,
+      departmentId: user.departmentId,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' },
+  );
 
 export const register = async (req, res, next) => {
   try {

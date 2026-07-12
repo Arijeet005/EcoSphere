@@ -2,12 +2,14 @@ import { body, validationResult } from 'express-validator';
 
 export const validateRegister = [
   body('name').trim().notEmpty().withMessage('Name is required.'),
-  body('email').isEmail().withMessage('A valid email is required.'),
+  body('email').trim().isEmail().withMessage('A valid email is required.').normalizeEmail(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long.'),
+  body('role').optional().isIn(['MANAGER', 'EMPLOYEE']).withMessage('Role must be MANAGER or EMPLOYEE.'),
+  body('departmentId').optional({ nullable: true }).isInt({ min: 1 }).withMessage('Department must be a valid ID.'),
 ];
 
 export const validateLogin = [
-  body('email').isEmail().withMessage('A valid email is required.'),
+  body('email').trim().isEmail().withMessage('A valid email is required.').normalizeEmail(),
   body('password').notEmpty().withMessage('Password is required.'),
 ];
 
