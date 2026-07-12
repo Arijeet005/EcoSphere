@@ -31,11 +31,17 @@ enum TransactionSource {
 enum ChallengeStatus {
   DRAFT
   ACTIVE
+  UNDER_REVIEW
+  COMPLETED
+  ARCHIVED
   CLOSED
 }
 
 enum ParticipationStatus {
   JOINED
+  SUBMITTED
+  APPROVED
+  REJECTED
   COMPLETED
 }
 
@@ -104,6 +110,7 @@ model User {
   createdChallenges         Challenge[]              @relation("ChallengeCreatedBy")
   departments               UserDepartment[]
   points                    Int                      @default(0)
+  xp                        Int                      @default(0)
   createdAt                 DateTime                 @default(now())
   updatedAt                 DateTime                 @updatedAt
 
@@ -230,6 +237,7 @@ model Badge {
   id                     Int                     @id @default(autoincrement())
   name                   String
   description            String?
+  unlockRule             Json?
   categoryId             Int?
   category               Category?               @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   employeeParticipations EmployeeParticipation[] @relation("BadgeAwardedTo")
@@ -304,6 +312,8 @@ model Challenge {
   startDate               DateTime
   endDate                 DateTime
   status                  ChallengeStatus          @default(DRAFT)
+  evidenceRequired        Boolean                  @default(false)
+  xpReward                Int                      @default(0)
   department              Department?              @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   category                Category?                @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   createdBy               User?                    @relation("ChallengeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -322,7 +332,13 @@ model ChallengeParticipation {
   userId        Int
   status        ParticipationStatus @default(JOINED)
   progressValue Float?              @default(0)
+  evidenceUrl   String?
+  submissionNote String?
+  xpAwarded     Int                 @default(0)
   joinedAt      DateTime            @default(now())
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  reviewedById  Int?
   completedAt   DateTime?
   challenge     Challenge           @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
