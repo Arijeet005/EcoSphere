@@ -46,7 +46,11 @@ const complianceItems = [
     framework: 'CSRD',
     dueDate: '2026-07-20T00:00:00.000Z',
     status: 'PENDING',
+    severity: 'HIGH',
+    owner: 'Ava Manager',
     departmentId: 1,
+    isOverdue: false,
+    description: 'Prepare the quarterly carbon disclosure packet for regulators.',
   },
   {
     id: 2,
@@ -54,7 +58,11 @@ const complianceItems = [
     framework: 'UNGC',
     dueDate: '2026-07-18T00:00:00.000Z',
     status: 'DONE',
+    severity: 'MEDIUM',
+    owner: 'Leo Employee',
     departmentId: 1,
+    isOverdue: true,
+    description: 'Revise the training module and confirm completion logs.',
   },
 ];
 
@@ -67,6 +75,9 @@ const csrActivities = [
     participant: { id: 2, name: 'Leo Employee' },
     date: '2026-07-08T00:00:00.000Z',
     hoursSpent: 4,
+    evidenceRequired: true,
+    evidenceUrl: '',
+    status: 'PENDING_APPROVAL',
   },
   {
     id: 2,
@@ -76,6 +87,9 @@ const csrActivities = [
     participant: { id: 1, name: 'Ava Manager' },
     date: '2026-07-09T00:00:00.000Z',
     hoursSpent: 2.5,
+    evidenceRequired: false,
+    evidenceUrl: '',
+    status: 'APPROVED',
   },
 ];
 
@@ -97,6 +111,56 @@ export const getMockCarbonSummary = (departmentId) => Promise.resolve({
 });
 export const getMockComplianceItems = () => Promise.resolve({ data: { success: true, data: complianceItems } });
 export const getMockCsrActivities = () => Promise.resolve({ data: { success: true, data: csrActivities } });
+
+export const mockSubmitCsrActivity = (payload) => Promise.resolve({
+  data: {
+    success: true,
+    data: {
+      id: Date.now(),
+      ...payload,
+      participant: { id: 2, name: 'Demo User' },
+      date: new Date().toISOString(),
+      status: 'PENDING_APPROVAL',
+    },
+  },
+});
+
+export const mockApproveCsrActivity = (id) => {
+  const activity = csrActivities.find((item) => item.id === Number(id));
+  if (activity) {
+    activity.status = 'APPROVED';
+  }
+  return Promise.resolve({ data: { success: true, data: activity } });
+};
+
+export const mockRejectCsrActivity = (id) => {
+  const activity = csrActivities.find((item) => item.id === Number(id));
+  if (activity) {
+    activity.status = 'REJECTED';
+  }
+  return Promise.resolve({ data: { success: true, data: activity } });
+};
+
+export const mockCreateComplianceIssue = (payload) => Promise.resolve({
+  data: {
+    success: true,
+    data: {
+      id: Date.now(),
+      ...payload,
+      status: 'PENDING',
+      isOverdue: false,
+      departmentId: Number(payload.departmentId || 1),
+    },
+  },
+});
+
+export const mockUpdateComplianceIssue = (payload) => {
+  const issue = complianceItems.find((item) => item.id === Number(payload.id));
+  if (issue) {
+    Object.assign(issue, payload);
+  }
+  return Promise.resolve({ data: { success: true, data: issue } });
+};
 
 export const mockCreateCarbonTransaction = (payload) => Promise.resolve({
   data: {
