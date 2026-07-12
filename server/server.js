@@ -5,6 +5,9 @@ import authRoutes from './routes/authRoutes.js';
 import metricsRoutes from './routes/metricsRoutes.js';
 import complianceRoutes from './routes/complianceRoutes.js';
 import csrRoutes from './routes/csrRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
+import emissionFactorRoutes from './routes/emissionFactorRoutes.js';
+import carbonRoutes from './routes/carbonRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -21,9 +24,12 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/departments', departmentRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/csr', csrRoutes);
+app.use('/api/emission-factors', emissionFactorRoutes);
+app.use('/api/carbon', carbonRoutes);
 
 app.use(errorHandler);
 
