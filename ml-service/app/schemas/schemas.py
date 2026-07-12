@@ -28,6 +28,13 @@ class ESGRequest(BaseModel):
     governance_metrics: MetricGroup
 
 
+class EnvironmentalInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    department: DepartmentInput
+    environment_metrics: MetricGroup
+
+
 class ValidationErrorItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -54,11 +61,23 @@ class ESGResponse(BaseModel):
     validation_errors: List[ValidationErrorItem] = Field(default_factory=list)
 
 
+class EnvironmentalResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    carbon_score: int
+    water_score: int
+    electricity_score: int
+    renewable_score: int
+    environmental_score: int
+
+
 __all__ = [
     "DepartmentInput",
     "MetricGroup",
     "ESGRequest",
+    "EnvironmentalInput",
     "ValidationErrorItem",
     "ScoreBreakdown",
     "ESGResponse",
+    "EnvironmentalResult",
 ]
