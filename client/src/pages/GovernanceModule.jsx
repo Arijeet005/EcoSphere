@@ -12,9 +12,10 @@ const tabs = [
 const PoliciesPage = () => (
   <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
     <h3 className="text-xl font-semibold text-white">Policies</h3>
-    <div className="mt-4 space-y-3">
-      <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">Data Privacy Policy</div>
-      <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">Supplier Code of Conduct</div>
+    <div className="mt-4 grid gap-3 md:grid-cols-2">
+      {['Data Privacy Policy', 'Supplier Code of Conduct', 'Anti-Corruption Standard', 'Whistleblower Procedure'].map((policy) => (
+        <div key={policy} className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4 text-sm text-violet-200">{policy}</div>
+      ))}
     </div>
   </div>
 );
@@ -22,7 +23,21 @@ const PoliciesPage = () => (
 const PolicyAcknowledgementsPage = () => (
   <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
     <h3 className="text-xl font-semibold text-white">Policy Acknowledgements</h3>
-    <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">Acknowledgement status is tracked here.</div>
+    <div className="mt-4 overflow-hidden rounded-xl border border-slate-800">
+      <table className="min-w-full divide-y divide-slate-800 text-sm text-slate-300">
+        <thead className="bg-slate-800/80">
+          <tr>
+            <th className="px-4 py-3 text-left font-medium">Employee</th>
+            <th className="px-4 py-3 text-left font-medium">Policy</th>
+            <th className="px-4 py-3 text-left font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-t border-slate-800"><td className="px-4 py-3">Priya Shah</td><td className="px-4 py-3">Code of Conduct</td><td className="px-4 py-3 text-emerald-300">Acknowledged</td></tr>
+          <tr className="border-t border-slate-800"><td className="px-4 py-3">Leo Chen</td><td className="px-4 py-3">Data Privacy</td><td className="px-4 py-3 text-amber-300">Pending</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 );
 
@@ -33,14 +48,17 @@ const AuditsPage = () => (
       <table className="min-w-full divide-y divide-slate-800 text-sm text-slate-300">
         <thead className="bg-slate-800/80">
           <tr>
-            <th className="px-4 py-3 text-left font-medium">Audit</th>
-            <th className="px-4 py-3 text-left font-medium">Scope</th>
+            <th className="px-4 py-3 text-left font-medium">Title</th>
+            <th className="px-4 py-3 text-left font-medium">Department</th>
+            <th className="px-4 py-3 text-left font-medium">Auditor</th>
+            <th className="px-4 py-3 text-left font-medium">Date</th>
+            <th className="px-4 py-3 text-left font-medium">Findings</th>
             <th className="px-4 py-3 text-left font-medium">Status</th>
           </tr>
         </thead>
         <tbody>
-          <tr className="border-t border-slate-800"><td className="px-4 py-3">ISO Review</td><td className="px-4 py-3">Operations</td><td className="px-4 py-3">Planned</td></tr>
-          <tr className="border-t border-slate-800"><td className="px-4 py-3">Supplier Risk Check</td><td className="px-4 py-3">Procurement</td><td className="px-4 py-3">Completed</td></tr>
+          <tr className="border-t border-slate-800"><td className="px-4 py-3">ISO Review</td><td className="px-4 py-3">Operations</td><td className="px-4 py-3">Tara Wells</td><td className="px-4 py-3">2026-06-10</td><td className="px-4 py-3">3 minor observations</td><td className="px-4 py-3 text-amber-300">Planned</td></tr>
+          <tr className="border-t border-slate-800"><td className="px-4 py-3">Supplier Risk Check</td><td className="px-4 py-3">Procurement</td><td className="px-4 py-3">Ned Ortiz</td><td className="px-4 py-3">2026-05-24</td><td className="px-4 py-3">1 significant finding</td><td className="px-4 py-3 text-emerald-300">Completed</td></tr>
         </tbody>
       </table>
     </div>

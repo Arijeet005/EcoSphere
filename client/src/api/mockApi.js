@@ -128,6 +128,53 @@ const activityFeed = [
   { id: 3, title: 'Leo submitted CSR participation evidence', category: 'Social', time: '3h ago' },
 ];
 
+const challenges = [
+  {
+    id: 1,
+    title: 'Zero Waste Week',
+    description: 'Reduce office waste by 20% this week.',
+    status: 'Active',
+    xp: 250,
+    difficulty: 'Medium',
+    deadline: '2026-07-20',
+  },
+  {
+    id: 2,
+    title: 'Green Commute Sprint',
+    description: 'Log 5 carpool or transit days.',
+    status: 'Under Review',
+    xp: 180,
+    difficulty: 'Easy',
+    deadline: '2026-07-18',
+  },
+  {
+    id: 3,
+    title: 'Supplier Sustainability Audit',
+    description: 'Complete audit responses for priority suppliers.',
+    status: 'Completed',
+    xp: 400,
+    difficulty: 'Hard',
+    deadline: '2026-07-12',
+  },
+];
+
+const challengeParticipations = [
+  { id: 1, challengeTitle: 'Zero Waste Week', employeeName: 'Priya Shah', status: 'Pending Approval' },
+  { id: 2, challengeTitle: 'Green Commute Sprint', employeeName: 'Leo Chen', status: 'Submitted' },
+];
+
+const badgeGallery = [
+  { id: 1, name: 'Climate Starter', description: 'Completed first carbon reduction challenge.', icon: '🌿' },
+  { id: 2, name: 'Community Builder', description: 'Hosted two volunteer events.', icon: '🤝' },
+  { id: 3, name: 'Governance Guardian', description: 'Maintained 100% policy acknowledgements.', icon: '🛡️' },
+];
+
+const leaderboard = [
+  { rank: 1, name: 'Priya Shah • Operations', xp: 1640 },
+  { rank: 2, name: 'Leo Chen • Supply Chain', xp: 1490 },
+  { rank: 3, name: 'Ava Manager • HR', xp: 1380 },
+];
+
 export const getMockDepartments = () => Promise.resolve({ data: { success: true, data: departments } });
 export const getMockEmissionFactors = () => Promise.resolve({ data: { success: true, data: emissionFactors } });
 export const getMockCarbonTransactions = () => Promise.resolve({ data: { success: true, data: carbonTransactions } });
@@ -150,6 +197,10 @@ export const getMockOverallScores = () => Promise.resolve({ data: { success: tru
 export const getMockEmissionsTrend = () => Promise.resolve({ data: { success: true, data: emissionsTrend } });
 export const getMockDepartmentRankings = () => Promise.resolve({ data: { success: true, data: departmentRankings } });
 export const getMockActivityFeed = () => Promise.resolve({ data: { success: true, data: activityFeed } });
+export const getMockChallenges = () => Promise.resolve({ data: { success: true, data: challenges } });
+export const getMockChallengeParticipations = () => Promise.resolve({ data: { success: true, data: challengeParticipations } });
+export const getMockBadgeGallery = () => Promise.resolve({ data: { success: true, data: badgeGallery } });
+export const getMockLeaderboard = () => Promise.resolve({ data: { success: true, data: leaderboard } });
 
 export const mockSubmitCsrActivity = (payload) => Promise.resolve({
   data: {

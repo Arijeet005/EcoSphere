@@ -1,13 +1,17 @@
 import {
   getMockActivityFeed,
+  getMockBadgeGallery,
   getMockCarbonSummary,
   getMockCarbonTransactions,
+  getMockChallengeParticipations,
+  getMockChallenges,
   getMockComplianceItems,
   getMockCsrActivities,
   getMockDepartmentRankings,
   getMockDepartments,
   getMockEmissionFactors,
   getMockEmissionsTrend,
+  getMockLeaderboard,
   getMockOverallScores,
   mockApproveCsrActivity,
   mockCreateCarbonTransaction,
@@ -33,3 +37,7 @@ export const fetchOverallScores = () => getMockOverallScores();
 export const fetchEmissionsTrend = () => getMockEmissionsTrend();
 export const fetchDepartmentRankings = () => getMockDepartmentRankings();
 export const fetchActivityFeed = () => getMockActivityFeed();
+export const fetchChallenges = () => getMockChallenges();
+export const fetchChallengeParticipations = () => getMockChallengeParticipations();
+export const fetchBadgeGallery = () => getMockBadgeGallery();
+export const fetchLeaderboard = () => getMockLeaderboard();
