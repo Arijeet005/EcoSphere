@@ -1,10 +1,14 @@
 import {
+  getMockActivityFeed,
   getMockCarbonSummary,
   getMockCarbonTransactions,
   getMockComplianceItems,
   getMockCsrActivities,
+  getMockDepartmentRankings,
   getMockDepartments,
   getMockEmissionFactors,
+  getMockEmissionsTrend,
+  getMockOverallScores,
   mockApproveCsrActivity,
   mockCreateCarbonTransaction,
   mockCreateComplianceIssue,
@@ -25,3 +29,7 @@ export const rejectCsrActivity = (id) => mockRejectCsrActivity(id);
 export const fetchComplianceItems = () => getMockComplianceItems();
 export const createComplianceItem = (payload) => mockCreateComplianceIssue(payload);
 export const updateComplianceItem = (payload) => mockUpdateComplianceIssue(payload);
+export const fetchOverallScores = () => getMockOverallScores();
+export const fetchEmissionsTrend = () => getMockEmissionsTrend();
+export const fetchDepartmentRankings = () => getMockDepartmentRankings();
+export const fetchActivityFeed = () => getMockActivityFeed();

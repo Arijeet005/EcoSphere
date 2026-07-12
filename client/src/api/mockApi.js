@@ -93,6 +93,41 @@ const csrActivities = [
   },
 ];
 
+const dashboardScores = {
+  environmentalScore: 88,
+  socialScore: 82,
+  governanceScore: 91,
+  overallScore: 87,
+};
+
+const emissionsTrend = [
+  { month: 'Jan', emissions: 118 },
+  { month: 'Feb', emissions: 112 },
+  { month: 'Mar', emissions: 121 },
+  { month: 'Apr', emissions: 109 },
+  { month: 'May', emissions: 105 },
+  { month: 'Jun', emissions: 101 },
+  { month: 'Jul', emissions: 98 },
+  { month: 'Aug', emissions: 96 },
+  { month: 'Sep', emissions: 92 },
+  { month: 'Oct', emissions: 90 },
+  { month: 'Nov', emissions: 87 },
+  { month: 'Dec', emissions: 84 },
+];
+
+const departmentRankings = [
+  { name: 'Operations', score: 91 },
+  { name: 'Logistics', score: 86 },
+  { name: 'HR', score: 83 },
+  { name: 'Supply Chain', score: 79 },
+];
+
+const activityFeed = [
+  { id: 1, title: 'Priya completed Zero Waste Week', category: 'Environmental', time: '10m ago' },
+  { id: 2, title: 'New compliance issue in Logistics', category: 'Governance', time: '1h ago' },
+  { id: 3, title: 'Leo submitted CSR participation evidence', category: 'Social', time: '3h ago' },
+];
+
 export const getMockDepartments = () => Promise.resolve({ data: { success: true, data: departments } });
 export const getMockEmissionFactors = () => Promise.resolve({ data: { success: true, data: emissionFactors } });
 export const getMockCarbonTransactions = () => Promise.resolve({ data: { success: true, data: carbonTransactions } });
@@ -111,6 +146,10 @@ export const getMockCarbonSummary = (departmentId) => Promise.resolve({
 });
 export const getMockComplianceItems = () => Promise.resolve({ data: { success: true, data: complianceItems } });
 export const getMockCsrActivities = () => Promise.resolve({ data: { success: true, data: csrActivities } });
+export const getMockOverallScores = () => Promise.resolve({ data: { success: true, data: dashboardScores } });
+export const getMockEmissionsTrend = () => Promise.resolve({ data: { success: true, data: emissionsTrend } });
+export const getMockDepartmentRankings = () => Promise.resolve({ data: { success: true, data: departmentRankings } });
+export const getMockActivityFeed = () => Promise.resolve({ data: { success: true, data: activityFeed } });
 
 export const mockSubmitCsrActivity = (payload) => Promise.resolve({
   data: {
