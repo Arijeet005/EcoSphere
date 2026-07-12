@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import SubTabBar from '../components/SubTabBar';
-import { fetchBadgeGallery, fetchChallengeParticipations, fetchChallenges, fetchLeaderboard } from '../api/metricsApi';
+import { fetchBadgeGallery, fetchChallengeParticipations, fetchChallenges, fetchLeaderboard, joinChallenge, reviewChallengeParticipation, submitChallengeProgress } from '../api/metricsApi';
+import { useAuth } from '../context/AuthContext';
 
 const tabs = [
   { label: 'Challenges', path: '/gamification/challenges' },
@@ -22,29 +23,43 @@ const Placeholder = ({ title, body }) => (
 
 const ChallengesPage = () => {
   const [challenges, setChallenges] = useState([]);
-  const [filter, setFilter] = useState('Active');
+  const [filter, setFilter] = useState('ACTIVE');
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  const loadChallenges = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchChallenges();
+      setChallenges(response?.data?.data || []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadChallenges = async () => {
-      try {
-        setLoading(true);
-        const response = await fetchChallenges();
-        setChallenges(response?.data?.data || []);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadChallenges();
   }, []);
 
-  const visibleChallenges = useMemo(() => challenges.filter((challenge) => challenge.status === filter || filter === 'All'), [challenges, filter]);
+  const visibleChallenges = useMemo(() => {
+    if (filter === 'ALL') return challenges;
+    return challenges.filter((challenge) => String(challenge.status || '').toUpperCase() === filter);
+  }, [challenges, filter]);
+
+  const handleJoin = async (challengeId) => {
+    try {
+      await joinChallenge(challengeId);
+      await loadChallenges();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
       <div className="mb-4 flex flex-wrap gap-2">
-        {filters.map((item) => (
-          <button key={item} onClick={() => setFilter(item)} className={`rounded-full px-3 py-1.5 text-sm ${filter === item ? 'bg-amber-500/20 text-amber-200' : 'bg-slate-800 text-slate-300'}`}>{item}</button>
+        {['ALL', ...filters].map((item) => (
+          <button key={item} onClick={() => setFilter(item.toUpperCase())} className={`rounded-full px-3 py-1.5 text-sm ${filter === item.toUpperCase() ? 'bg-amber-500/20 text-amber-200' : 'bg-slate-800 text-slate-300'}`}>{item}</button>
         ))}
       </div>
       {loading ? <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">Loading challenges…</div> : visibleChallenges.length === 0 ? <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">No challenges match this filter.</div> : <div className="grid gap-4 lg:grid-cols-2">{visibleChallenges.map((challenge) => (
@@ -54,14 +69,15 @@ const ChallengesPage = () => {
               <h4 className="text-lg font-semibold text-white">{challenge.title}</h4>
               <p className="mt-1 text-sm text-slate-300">{challenge.description}</p>
             </div>
-            <span className="rounded-full bg-slate-900/80 px-2.5 py-1 text-xs font-medium text-amber-200">{challenge.status}</span>
+            <span className="rounded-full bg-slate-900/80 px-2.5 py-1 text-xs font-medium text-amber-200">{String(challenge.status || '').toLowerCase()}</span>
           </div>
           <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-300">
-            <span>XP: {challenge.xp}</span>
-            <span>Difficulty: {challenge.difficulty}</span>
-            <span>Deadline: {challenge.deadline}</span>
+            <span>XP: {challenge.xpReward ?? challenge.xp ?? 0}</span>
+            <span>Deadline: {challenge.endDate ? new Date(challenge.endDate).toLocaleDateString() : 'Open ended'}</span>
           </div>
-          <button className="mt-4 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-amber-400">Join Challenge</button>
+          {user?.role === 'EMPLOYEE' ? (
+            <button onClick={() => handleJoin(challenge.id)} className="mt-4 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-amber-400">Join Challenge</button>
+          ) : null}
         </div>
       ))}</div>}
     </div>
@@ -71,19 +87,31 @@ const ChallengesPage = () => {
 const ChallengeParticipationPage = () => {
   const [participations, setParticipations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  const loadParticipations = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchChallengeParticipations();
+      setParticipations(response?.data?.data || []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadParticipations = async () => {
-      try {
-        setLoading(true);
-        const response = await fetchChallengeParticipations();
-        setParticipations(response?.data?.data || []);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadParticipations();
   }, []);
+
+  const handleReview = async (participationId, decision) => {
+    await reviewChallengeParticipation(participationId, { status: decision, xpAwarded: 50 });
+    await loadParticipations();
+  };
+
+  const handleSubmitProgress = async (participationId) => {
+    await submitChallengeProgress(participationId, { progressValue: 100, submissionNote: 'Completed via demo workflow' });
+    await loadParticipations();
+  };
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
@@ -92,12 +120,19 @@ const ChallengeParticipationPage = () => {
         <div key={item.id} className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="font-medium text-white">{item.challengeTitle}</p>
-              <p className="mt-1 text-sm text-slate-400">{item.employeeName} • {item.status}</p>
+              <p className="font-medium text-white">{item.challenge?.title || item.challengeTitle}</p>
+              <p className="mt-1 text-sm text-slate-400">{item.user?.name || item.employeeName} • {String(item.status || '').toLowerCase()}</p>
             </div>
-            <div className="flex gap-2">
-              <button className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500">Approve</button>
-              <button className="rounded bg-rose-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-500">Reject</button>
+            <div className="flex flex-wrap gap-2">
+              {user?.role === 'EMPLOYEE' ? (
+                <button onClick={() => handleSubmitProgress(item.id)} className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-500">Submit progress</button>
+              ) : null}
+              {user?.role === 'MANAGER' ? (
+                <>
+                  <button onClick={() => handleReview(item.id, 'APPROVED')} className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500">Approve</button>
+                  <button onClick={() => handleReview(item.id, 'REJECTED')} className="rounded bg-rose-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-500">Reject</button>
+                </>
+              ) : null}
             </div>
           </div>
         </div>

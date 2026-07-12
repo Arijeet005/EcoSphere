@@ -15,6 +15,7 @@ import carbonRoutes from './routes/carbonRoutes.js';
 
 import scoreRoutes from './routes/scoreRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
+import badgeRoutes from './routes/badgeRoutes.js';
 
 import { errorHandler } from './middleware/errorHandler.js';
 import { sanitizeInputs } from './middleware/sanitizeInputs.js';

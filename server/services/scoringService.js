@@ -1,74 +1,8 @@
-<<<<<<< HEAD
+import prisma from '../config/db.js';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const logger = require('node:console');
-
-/**
- * Calculate a department ESG score using the default 40/30/30 weighting that matches the
- * business workflow described in the platform spec: environmental is the heaviest pillar
- * because carbon footprint reduction is the primary operational signal, while social and
- * governance remain significant but slightly less dominant for MVP scoring.
- *
- * @param {{environmental?: number, social?: number, governance?: number}} scoreInput
- * @param {{e?: number, s?: number, g?: number}} [weights]
- * @returns {{totalScore: number, environmental: number, social: number, governance: number}}
- */
-export const calculateDepartmentScore = (scoreInput = {}, weights = { e: 0.4, s: 0.3, g: 0.3 }) => {
-  const safeInput = scoreInput || {};
-  const safeWeights = weights || { e: 0.4, s: 0.3, g: 0.3 };
-
-  const environmental = Number.isFinite(Number(safeInput.environmental)) ? Number(safeInput.environmental) : 0;
-  const social = Number.isFinite(Number(safeInput.social)) ? Number(safeInput.social) : 0;
-  const governance = Number.isFinite(Number(safeInput.governance)) ? Number(safeInput.governance) : 0;
-
-  if (!Number.isFinite(Number(safeWeights.e)) || !Number.isFinite(Number(safeWeights.s)) || !Number.isFinite(Number(safeWeights.g))) {
-    throw new Error('Scoring weights must be numeric values.');
-  }
-
-  const totalWeight = Number(safeWeights.e) + Number(safeWeights.s) + Number(safeWeights.g);
-  if (Math.abs(totalWeight - 1) > 1e-9) {
-    throw new Error('Scoring weights must sum to 1.');
-  }
-
-  const totalScore = environmental * Number(safeWeights.e) + social * Number(safeWeights.s) + governance * Number(safeWeights.g);
-
-  return {
-    totalScore,
-    environmental,
-    social,
-    governance,
-  };
-};
-
-/**
- * Calculate an overall score by averaging department-level totals.
- * The MVP uses a simple average; this can later be refined to use employee counts or
- * department-specific weights if that becomes a business requirement.
- *
- * @param {number[]} departmentScores
- * @returns {number}
- */
-export const calculateOverallScore = (departmentScores = []) => {
-  if (!Array.isArray(departmentScores)) {
-    throw new Error('departmentScores must be an array.');
-  }
-
-  if (departmentScores.length === 0) {
-    logger.warn('No department scores provided; returning 0.');
-    return 0;
-  }
-
-  const numericScores = departmentScores.map((score) => {
-    if (!Number.isFinite(Number(score))) {
-      throw new Error('Department scores must be numeric values.');
-    }
-    return Number(score);
-  });
-
-  return numericScores.reduce((sum, score) => sum + score, 0) / numericScores.length;
-=======
-import prisma from '../config/db.js';
 
 const clampScore = (value) => Math.max(0, Math.min(100, Number(value.toFixed(2))));
 
@@ -205,14 +139,88 @@ export const calculateAndPersistDepartmentScore = async (departmentId) => {
 };
 
 export const getOverallScore = async () => {
-  const aggregate = await prisma.departmentScore.aggregate({
-    _avg: { totalScore: true },
-    _count: { _all: true },
-  });
+  const departments = await prisma.department.findMany({ select: { id: true } });
+  if (departments.length === 0) {
+    return {
+      environmental: 0,
+      social: 0,
+      governance: 0,
+      totalScore: 0,
+      overallScore: 0,
+      departmentCount: 0,
+    };
+  }
+
+  const scores = await Promise.all(
+    departments.map(async (d) => {
+      try {
+        return await calculateAndPersistDepartmentScore(d.id);
+      } catch (err) {
+        return { environmental: 0, social: 0, governance: 0, totalScore: 0 };
+      }
+    })
+  );
+
+  const avgEnvironmental = scores.reduce((sum, s) => sum + s.environmental, 0) / scores.length;
+  const avgSocial = scores.reduce((sum, s) => sum + s.social, 0) / scores.length;
+  const avgGovernance = scores.reduce((sum, s) => sum + s.governance, 0) / scores.length;
+  const avgTotal = scores.reduce((sum, s) => sum + s.totalScore, 0) / scores.length;
 
   return {
-    overallScore: clampScore(aggregate._avg.totalScore ?? 0),
-    departmentScoreCount: aggregate._count._all,
+    environmental: clampScore(avgEnvironmental),
+    social: clampScore(avgSocial),
+    governance: clampScore(avgGovernance),
+    totalScore: clampScore(avgTotal),
+    overallScore: clampScore(avgTotal),
+    departmentCount: departments.length,
+    departmentScoreCount: departments.length,
   };
->>>>>>> 6fd5ae2aec17d356888503d114494300fa69f4e4
 };
+
+export const calculateDepartmentScore = (scoreInput = {}, weights = { e: 0.4, s: 0.3, g: 0.3 }) => {
+  const safeInput = scoreInput || {};
+  const safeWeights = weights || { e: 0.4, s: 0.3, g: 0.3 };
+
+  const environmental = Number.isFinite(Number(safeInput.environmental)) ? Number(safeInput.environmental) : 0;
+  const social = Number.isFinite(Number(safeInput.social)) ? Number(safeInput.social) : 0;
+  const governance = Number.isFinite(Number(safeInput.governance)) ? Number(safeInput.governance) : 0;
+
+  if (!Number.isFinite(Number(safeWeights.e)) || !Number.isFinite(Number(safeWeights.s)) || !Number.isFinite(Number(safeWeights.g))) {
+    throw new Error('Scoring weights must be numeric values.');
+  }
+
+  const totalWeight = Number(safeWeights.e) + Number(safeWeights.s) + Number(safeWeights.g);
+  if (Math.abs(totalWeight - 1) > 1e-9) {
+    throw new Error('Scoring weights must sum to 1.');
+  }
+
+  const totalScore = environmental * Number(safeWeights.e) + social * Number(safeWeights.s) + governance * Number(safeWeights.g);
+
+  return {
+    totalScore,
+    environmental,
+    social,
+    governance,
+  };
+};
+
+export const calculateOverallScore = (departmentScores = []) => {
+  if (!Array.isArray(departmentScores)) {
+    throw new Error('departmentScores must be an array.');
+  }
+
+  if (departmentScores.length === 0) {
+    logger.warn('No department scores provided; returning 0.');
+    return 0;
+  }
+
+  const numericScores = departmentScores.map((score) => {
+    if (!Number.isFinite(Number(score))) {
+      throw new Error('Department scores must be numeric values.');
+    }
+    return Number(score);
+  });
+
+  return numericScores.reduce((sum, score) => sum + score, 0) / numericScores.length;
+};
+

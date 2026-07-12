@@ -12,19 +12,9 @@ import { authorizeRole } from '../middleware/roleMiddleware.js';
 const router = express.Router();
 
 router.get('/', protect, getCsrActivities);
-
 router.get('/:id', protect, getCsrActivityById);
-router.post('/', protect, authorizeRole('MANAGER'), createCsrActivity);
+router.post('/', protect, createCsrActivity);
 router.put('/:id', protect, authorizeRole('MANAGER'), updateCsrActivity);
 router.delete('/:id', protect, authorizeRole('MANAGER'), deleteCsrActivity);
-router.post('/', protect, createCsrActivity);
-router.put('/:id', protect, updateCsrActivity);
-router.delete('/:id', protect, deleteCsrActivity);
-router.patch('/:id/approve', protect, (req, res) => {
-  res.json({ success: true, data: { id: Number(req.params.id), status: 'APPROVED' } });
-});
-router.patch('/:id/reject', protect, (req, res) => {
-  res.json({ success: true, data: { id: Number(req.params.id), status: 'REJECTED' } });
-});
 
 export default router;

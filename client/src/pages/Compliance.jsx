@@ -45,11 +45,19 @@ const Compliance = () => {
     try {
       setSaving(true);
       setStatus({ type: 'idle', message: '' });
+      const departmentId = user?.departmentId ? Number(user.departmentId) : 1;
+      const payload = {
+        ...form,
+        departmentId,
+        ownerId: user?.id || 1,
+        dueDate: form.dueDate,
+      };
+
       if (form.id) {
-        await updateComplianceItem({ ...form, id: Number(form.id) });
+        await updateComplianceItem({ ...payload, id: Number(form.id) });
         setStatus({ type: 'success', message: 'Compliance issue updated.' });
       } else {
-        await createComplianceItem({ ...form, departmentId: 1 });
+        await createComplianceItem(payload);
         setStatus({ type: 'success', message: 'Compliance issue created.' });
       }
       setForm(emptyForm);

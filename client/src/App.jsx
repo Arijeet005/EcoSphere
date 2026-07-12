@@ -4,7 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import EnvironmentalDashboard from './pages/EnvironmentalDashboard';
+import Dashboard from './pages/Dashboard';
 import EnvironmentalModule from './pages/EnvironmentalModule';
 import SocialModule from './pages/SocialModule';
 import GovernanceModule from './pages/GovernanceModule';
@@ -20,7 +20,7 @@ const App = () => (
         <Route path="/register" element={<Register />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
-            <Route path="/dashboard" element={<EnvironmentalDashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/environmental/*" element={<EnvironmentalModule />} />
             <Route path="/social/*" element={<SocialModule />} />
             <Route path="/governance/*" element={<GovernanceModule />} />
