@@ -1,28 +1,35 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import AppShell from './components/AppShell';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
-import Compliance from './pages/Compliance';
-import CsrActivities from './pages/CsrActivities';
-import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
-import MetricsForm from './pages/MetricsForm';
 import Register from './pages/Register';
+import EnvironmentalDashboard from './pages/EnvironmentalDashboard';
+import EnvironmentalModule from './pages/EnvironmentalModule';
+import SocialModule from './pages/SocialModule';
+import GovernanceModule from './pages/GovernanceModule';
+import GamificationModule from './pages/GamificationModule';
+import ReportsModule from './pages/ReportsModule';
+import SettingsModule from './pages/SettingsModule';
 
 const App = () => (
   <AuthProvider>
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <Navbar />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route element={<ProtectedRoute />}> 
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/metrics" element={<MetricsForm />} />
-          <Route path="/compliance" element={<Compliance />} />
-          <Route path="/csr" element={<CsrActivities />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppShell />}>
+            <Route path="/dashboard" element={<EnvironmentalDashboard />} />
+            <Route path="/environmental/*" element={<EnvironmentalModule />} />
+            <Route path="/social/*" element={<SocialModule />} />
+            <Route path="/governance/*" element={<GovernanceModule />} />
+            <Route path="/gamification/*" element={<GamificationModule />} />
+            <Route path="/reports/*" element={<ReportsModule />} />
+            <Route path="/settings/*" element={<SettingsModule />} />
+          </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>
   </AuthProvider>

@@ -9,10 +9,13 @@ import participationRoutes from './routes/participationRoutes.js';
 import challengeRoutes from './routes/challengeRoutes.js';
 import challengeParticipationRoutes from './routes/challengeParticipationRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
+
 import emissionFactorRoutes from './routes/emissionFactorRoutes.js';
 import carbonRoutes from './routes/carbonRoutes.js';
+
 import scoreRoutes from './routes/scoreRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
+
 import { errorHandler } from './middleware/errorHandler.js';
 import { sanitizeInputs } from './middleware/sanitizeInputs.js';
 
@@ -35,13 +38,22 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/csr', csrRoutes);
+
 app.use('/api/participation', participationRoutes);
+
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/challenge-participation', challengeParticipationRoutes);
+
+
+
+app.use('/api/departments', departmentRoutes);
+
+
 app.use('/api/emission-factors', emissionFactorRoutes);
 app.use('/api/carbon', carbonRoutes);
 app.use('/api/scores', scoreRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+
 
 app.use(errorHandler);
 
