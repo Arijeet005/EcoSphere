@@ -10,13 +10,19 @@ export const protect = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
-    req.user = user;
+    req.user = {
+      userId: user.id,
+      role: user.role,
+      departmentId: user.departmentId,
+      name: user.name,
+      email: user.email,
+    };
     next();
   } catch (error) {
     next(error);
