@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  EMPLOYEE
+}
+
+enum MetricType {
+  ENVIRONMENTAL
+  SOCIAL
+  GOVERNANCE
+}
+
+enum ComplianceStatus {
+  PENDING
+  DONE
+  OVERDUE
+}
+
+model Department {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique
+  users            User[]
+  metrics          EsgMetric[]
+  complianceItems  ComplianceItem[]
+  userDepartments  UserDepartment[]
+  @@index([name])
+}
+
+model UserDepartment {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  departmentId Int
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, departmentId])
+  @@index([departmentId])
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(EMPLOYEE)
+  departmentId Int?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  metrics      EsgMetric[] @relation("MetricSubmittedBy")
+  csrActivities CsrActivity[] @relation("ActivityParticipant")
+  auditLogs    AuditLog[] @relation("AuditPerformedBy")
+  departments  UserDepartment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([departmentId])
+}
+
+model EsgMetric {
+  id            Int        @id @default(autoincrement())
+  type          MetricType
+  name          String
+  value         Float
+  unit          String
+  departmentId  Int
+  department    Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  submittedById Int
+  submittedBy   User       @relation("MetricSubmittedBy", fields: [submittedById], references: [id], onDelete: Cascade)
+  date          DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([departmentId])
+  @@index([date])
+}
+
+model ComplianceItem {
+  id            Int               @id @default(autoincrement())
+  title         String
+  framework     String
+  dueDate       DateTime
+  status        ComplianceStatus  @default(PENDING)
+  departmentId  Int
+  department    Department        @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([departmentId])
+  @@index([dueDate])
+}
+
+model CsrActivity {
+  id              Int      @id @default(autoincrement())
+  title           String
+  description     String
+  participantId   Int
+  participant     User     @relation("ActivityParticipant", fields: [participantId], references: [id], onDelete: Cascade)
+  date            DateTime @default(now())
+  hoursSpent      Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([participantId])
+  @@index([date])
+}
+
+model AuditLog {
+  id            Int      @id @default(autoincrement())
+  action        String
+  entity        String
+  entityId      Int
+  performedById Int?
+  performedBy   User?    @relation("AuditPerformedBy", fields: [performedById], references: [id], onDelete: SetNull)
+  oldValue      Json?
+  newValue      Json?
+  timestamp     DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([timestamp])
+}
